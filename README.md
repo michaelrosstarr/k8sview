@@ -3,6 +3,7 @@
 A small desktop Kubernetes viewer built with Tauri v2, Next.js (static export), and Mantine.
 
 - Switch kubeconfig contexts and namespaces
+- Command palette (**⌘K** / **Ctrl+K**, or the search box in the header): jump to any view, open logs / a shell / attach / port forward for any running pod in any namespace, switch namespace or context, manage port forwards and terminals, toggle the theme, check for updates
 - List pods with kubectl-style status, readiness, restarts, and age (auto-refreshes every 5s)
 - Restart a pod (delete it so its controller recreates it; warns when the pod has no owner) or delete it
 - Inspect a pod: container images and versions, the effective environment, and every ConfigMap it references

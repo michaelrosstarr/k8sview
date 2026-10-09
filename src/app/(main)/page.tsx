@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActionIcon,
   Alert,
@@ -34,11 +34,11 @@ import { UsageView } from "@/components/usage/UsageView";
 import { ColorSchemeToggle } from "@/components/ColorSchemeToggle";
 import { Logo } from "@/components/Logo";
 import { UpdateStatus } from "@/components/UpdateStatus";
+import { CommandPalette, CommandPaletteButton, type View } from "@/components/CommandPalette";
 import { useAppInfo } from "@/components/useAppInfo";
 import { DOCK_HEADER, LogDock, useLogDock } from "@/components/logs/LogDock";
 import { PortForwardsView, usePortForwards } from "@/components/PortForwards";
 
-type View = "pods" | "configmaps" | "usage" | "versions" | "flux" | "portforwards";
 
 const CONTEXT_KEY = "k8sview.context";
 const namespaceKey = (context: string) => `k8sview.namespace.${context}`;
@@ -111,11 +111,24 @@ export default function Home() {
       .catch((e: Error) => setConnError(e.message));
   }, [activate]);
 
-  const changeNamespace = (ns: string | null) => {
-    if (!ns || !context) return;
-    setNamespace(ns);
-    localStorage.setItem(namespaceKey(context), ns);
-  };
+  const changeNamespace = useCallback(
+    (ns: string | null) => {
+      if (!ns || !context) return;
+      setNamespace(ns);
+      localStorage.setItem(namespaceKey(context), ns);
+    },
+    [context],
+  );
+
+  // Stable callbacks for the command palette, which rebuilds its actions when they change.
+  const switchContext = useCallback(
+    (name: string) => {
+      if (name !== context) void activate(name, contexts);
+    },
+    [activate, context, contexts],
+  );
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+  const contextNames = useMemo(() => contexts.map((c) => c.name), [contexts]);
 
   const ready = context && namespace && !connError && !switching;
 
@@ -142,6 +155,7 @@ export default function Home() {
             )}
           </Group>
           <Group gap="sm" wrap="nowrap">
+            <CommandPaletteButton />
             <Select
               aria-label="Context"
               placeholder="Context"
@@ -274,6 +288,16 @@ export default function Home() {
           ))
         )}
       </AppShell.Main>
+      <CommandPalette
+        contexts={contextNames}
+        context={context}
+        namespaces={namespaces}
+        namespace={namespace}
+        onView={setView}
+        onContext={switchContext}
+        onNamespace={changeNamespace}
+        onRefresh={refresh}
+      />
       {dock.sessions.length > 0 && (
         <AppShell.Footer>
           <LogDock />

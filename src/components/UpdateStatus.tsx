@@ -7,6 +7,7 @@ import { notifications } from "@mantine/notifications";
 import { IconDownload, IconRefresh } from "@tabler/icons-react";
 import { checkForUpdate, installUpdate, type UpdateInfo } from "@/lib/updates";
 import { useAppInfo } from "./useAppInfo";
+import { CHECK_UPDATES_EVENT } from "./CommandPalette";
 
 const FIRST_CHECK_MS = 15_000;
 const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
@@ -41,6 +42,13 @@ export function UpdateStatus() {
     return () => clearTimeout(t);
   }, [check]);
   useInterval(() => check(false), CHECK_EVERY_MS, { autoInvoke: true });
+
+  // "Check for updates" from the command palette.
+  useEffect(() => {
+    const onRequest = () => check(true);
+    window.addEventListener(CHECK_UPDATES_EVENT, onRequest);
+    return () => window.removeEventListener(CHECK_UPDATES_EVENT, onRequest);
+  }, [check]);
 
   const install = () => {
     setInstallError(null);
