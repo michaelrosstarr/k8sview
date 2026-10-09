@@ -279,10 +279,23 @@ fn exec_stop(state: State<'_, AppState>, id: u32) {
     state.exec.stop(id);
 }
 
-/// The app version as shown to people: 2026.10.9.4821.
+#[derive(serde::Serialize)]
+struct AppInfo {
+    name: String,
+    /// As shown to people: 2026.10.9.4821.
+    version: String,
+    /// Built locally ("k8sview - dev") rather than by the release workflow.
+    dev: bool,
+}
+
 #[tauri::command]
-fn app_version(app: AppHandle) -> String {
-    updates::display_version(&app.package_info().version.to_string())
+fn app_info(app: AppHandle) -> AppInfo {
+    let info = app.package_info();
+    AppInfo {
+        dev: info.name != "k8sview",
+        name: info.name.clone(),
+        version: updates::display_version(&info.version.to_string()),
+    }
 }
 
 #[tauri::command]
@@ -452,7 +465,7 @@ pub fn run() {
             exec_input,
             exec_resize,
             exec_stop,
-            app_version,
+            app_info,
             check_for_update,
             install_update,
             list_workload_versions,

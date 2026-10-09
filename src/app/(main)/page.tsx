@@ -34,6 +34,7 @@ import { UsageView } from "@/components/usage/UsageView";
 import { ColorSchemeToggle } from "@/components/ColorSchemeToggle";
 import { Logo } from "@/components/Logo";
 import { UpdateStatus } from "@/components/UpdateStatus";
+import { useAppInfo } from "@/components/useAppInfo";
 import { DOCK_HEADER, LogDock, useLogDock } from "@/components/logs/LogDock";
 import { PortForwardsView, usePortForwards } from "@/components/PortForwards";
 
@@ -55,6 +56,7 @@ export default function Home() {
   const started = useRef(false);
   const { forwards } = usePortForwards();
   const dock = useLogDock();
+  const appInfo = useAppInfo();
 
   /** Point the backend at `name`, then load its namespaces and pick one. */
   const activate = useCallback(async (name: string, known: k8s.ContextInfo[]) => {
@@ -131,6 +133,13 @@ export default function Home() {
           <Group gap="xs" wrap="nowrap">
             <Logo />
             <Title order={4}>k8sview</Title>
+            {appInfo?.dev && (
+              <Tooltip label="A local build (pnpm tauri dev / tauri build), not a release" withArrow>
+                <Badge color="orange" variant="light" size="sm">
+                  dev
+                </Badge>
+              </Tooltip>
+            )}
           </Group>
           <Group gap="sm" wrap="nowrap">
             <Select

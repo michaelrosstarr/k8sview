@@ -5,23 +5,21 @@ import { Anchor, Button, Group, Modal, Progress, ScrollArea, Stack, Text, Toolti
 import { useInterval } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconDownload, IconRefresh } from "@tabler/icons-react";
-import { appVersion, checkForUpdate, installUpdate, type UpdateInfo } from "@/lib/updates";
+import { checkForUpdate, installUpdate, type UpdateInfo } from "@/lib/updates";
+import { useAppInfo } from "./useAppInfo";
 
 const FIRST_CHECK_MS = 15_000;
 const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
 
 /** Version + update controls for the bottom of the navbar. */
 export function UpdateStatus() {
-  const [version, setVersion] = useState<string | null>(null);
+  const info = useAppInfo();
+  const version = info?.version ?? null;
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [checking, setChecking] = useState(false);
   const [open, setOpen] = useState(false);
   const [progress, setProgress] = useState<{ downloaded: number; total: number | null } | "installing" | null>(null);
   const [installError, setInstallError] = useState<string | null>(null);
-
-  useEffect(() => {
-    appVersion().then(setVersion, () => {});
-  }, []);
 
   /** Background checks stay quiet; a manual check reports what it found. */
   const check = useCallback((manual: boolean) => {

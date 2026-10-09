@@ -5,8 +5,9 @@
 // 2026.10.9.4821, and the app displays it that way everywhere.
 //
 //   node scripts/version.mjs                    new version (today, UTC) written to every file
-//   node scripts/version.mjs --set 2026.10.9.4821 [--endpoint URL]
-//                                               write a given version (CI, so all platforms match)
+//   node scripts/version.mjs --set 2026.10.9.4821 [--endpoint URL] [--release]
+//                                               write a given version (CI, so all platforms match);
+//                                               --release names the app "k8sview" instead of "k8sview - dev"
 //   node scripts/version.mjs --print-only       compute a new version without writing (CI outputs)
 import { randomInt } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -56,6 +57,13 @@ editJson("src-tauri/tauri.conf.json", (c) => {
   c.bundle.macOS = { ...c.bundle.macOS, bundleVersion: normalized };
   const endpoint = flag("--endpoint");
   if (endpoint) c.plugins.updater.endpoints = [endpoint];
+  // Local builds stay "k8sview - dev" with their own identifier, so they never
+  // get confused with (or overwrite) an installed release.
+  if (args.includes("--release")) {
+    c.productName = "k8sview";
+    c.identifier = "dev.k8sview.app";
+    c.app.windows[0].title = "k8sview";
+  }
 });
 
 const cargoUrl = new URL("src-tauri/Cargo.toml", root);

@@ -20,7 +20,17 @@ async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> 
   }
 }
 
-export const appVersion = () => call<string>("app_version");
+export interface AppInfo {
+  name: string;
+  /** As shown to people: 2026.10.9.4821. */
+  version: string;
+  /** A local build ("k8sview - dev") rather than a release. */
+  dev: boolean;
+}
+
+let appInfoPromise: Promise<AppInfo> | null = null;
+/** Fetched once and shared; it can't change while the app runs. */
+export const appInfo = () => (appInfoPromise ??= call<AppInfo>("app_info"));
 export const checkForUpdate = () => call<UpdateInfo | null>("check_for_update");
 /** Downloads, verifies and installs, then the app restarts itself. */
 export const installUpdate = (onProgress: (p: UpdateProgress) => void) =>

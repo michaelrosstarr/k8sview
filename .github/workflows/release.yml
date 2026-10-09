@@ -77,11 +77,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Stamp the shared version and point the updater at this repo's latest release.
+      # Stamp the shared version, name it "k8sview" (local builds are "k8sview - dev"),
+      # and point the updater at this repo's latest release.
       - shell: bash
         run: >
           node scripts/version.mjs
           --set "${{ needs.version.outputs.version }}"
+          --release
           --endpoint "https://github.com/${{ github.repository }}/releases/latest/download/latest.json"
 
       - uses: tauri-apps/tauri-action@v0

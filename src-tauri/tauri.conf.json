@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "k8sview",
+  "productName": "k8sview - dev",
   "version": "2026.10.9+5248",
-  "identifier": "dev.k8sview.app",
+  "identifier": "dev.k8sview.app.dev",
   "build": {
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "k8sview",
+        "title": "k8sview - dev",
         "width": 1280,
         "height": 800,
         "resizable": true,
@@ -48,7 +48,8 @@
     "category": "DeveloperTool",
     "shortDescription": "Desktop Kubernetes viewer",
     "macOS": {
-      "bundleVersion": "2026.10.9.5248"
+      "bundleVersion": "2026.10.9.5248",
+      "signingIdentity": "-"
     }
   },
   "plugins": {
