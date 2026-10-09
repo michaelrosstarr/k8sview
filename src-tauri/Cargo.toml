@@ -1,0 +1,31 @@
+[package]
+name = "k8sview"
+version = "2026.10.9+5248"
+description = "Desktop Kubernetes viewer"
+authors = ["Michael Ross Tarr"]
+license = ""
+repository = ""
+edition = "2024"
+rust-version = "1.90"
+
+[lib]
+name = "k8sview_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.1", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.12.1", features = [] }
+tauri-plugin-log = "2"
+kube = { version = "4.2", default-features = false, features = ["client", "config", "rustls-tls", "ring", "ws"] }
+k8s-openapi = { version = "0.28", features = ["latest"] }
+tokio = { version = "1", features = ["sync", "rt", "net", "io-util", "macros", "time"] }
+tauri-plugin-opener = "2"
+tauri-plugin-updater = "2"
+semver = "1"
+anyhow = "1"
+futures = "0.3"

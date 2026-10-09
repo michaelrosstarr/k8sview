@@ -1,0 +1,166 @@
+/* Chart tokens. Status colors are the fixed status palette (same in both modes);
+   series and chrome step for the surface. Validated with the dataviz palette
+   checker against Mantine's surfaces (#ffffff light, #242424 dark). */
+.charts {
+  --status-ready: #0ca30c;
+  --status-pending: #fab219;
+  --status-failing: #d03b3b;
+  --status-suspended: #898781;
+  --series-1: #2a78d6;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+
+  @mixin dark {
+    --series-1: #3987e5;
+    --grid: #333331;
+    --axis: #45453f;
+  }
+}
+
+/* Horizontal bars: <= 24px thick, 2px surface gaps between segments (the
+   flex gap shows the card surface), 4px rounded data-end, square baseline. */
+.hbar {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  min-width: 0;
+}
+
+.track {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.segment {
+  height: 100%;
+  min-width: 3px;
+  cursor: default;
+  outline-offset: 2px;
+  transition: filter 120ms ease;
+
+  &:last-child {
+    border-radius: 0 4px 4px 0;
+  }
+
+  &:hover,
+  &:focus-visible {
+    filter: brightness(1.15);
+  }
+}
+
+/* Column chart */
+.plot {
+  position: relative;
+  border-bottom: 1px solid var(--axis);
+}
+
+.gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--grid);
+}
+
+.columns {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* The whole slot is the hit target; the painted column is capped at 24px. */
+.slot {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 2px;
+  outline-offset: -1px;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(11, 11, 11, 0.04);
+
+    @mixin dark {
+      background: rgba(255, 255, 255, 0.05);
+    }
+  }
+}
+
+.column {
+  width: min(70%, 24px);
+  min-height: 2px;
+
+  /* Rounded data-end on the top segment only; baseline stays square. */
+  &:last-child {
+    border-radius: 4px 4px 0 0;
+  }
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.clickableRow {
+  cursor: pointer;
+  border-radius: var(--mantine-radius-sm);
+
+  &:hover {
+    background: var(--mantine-color-gray-0);
+
+    @mixin dark {
+      background: var(--mantine-color-dark-6);
+    }
+  }
+}
+
+/* Meter: the fill carries severity; the track is a lighter step of the same ramp. */
+.meter {
+  --meter-track: #cde2fb;
+
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--meter-track);
+  overflow: visible;
+
+  @mixin dark {
+    --meter-track: #20406a;
+  }
+}
+
+.meterFill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--series-1);
+}
+
+.meterMarker {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--mantine-color-text);
+  opacity: 0.7;
+}
+
+/* Time series hover layer */
+.tsTooltip {
+  position: absolute;
+  pointer-events: none;
+  padding: 6px 8px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-body);
+  border: 1px solid var(--mantine-color-default-border);
+  box-shadow: var(--mantine-shadow-sm);
+  white-space: nowrap;
+  z-index: 3;
+}

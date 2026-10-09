@@ -1,0 +1,13 @@
+/* Both icons are always rendered; CSS keyed on the color-scheme attribute
+   (set before React loads) picks one, so server and client HTML match. */
+.sun {
+  @mixin light {
+    display: none;
+  }
+}
+
+.moon {
+  @mixin dark {
+    display: none;
+  }
+}

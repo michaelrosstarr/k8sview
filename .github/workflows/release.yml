@@ -1,0 +1,115 @@
+# Builds signed k8sview releases for macOS (Apple Silicon), Windows and Linux,
+# publishes them as a GitHub Release, and writes the latest.json that installed
+# apps check for updates.
+#
+# Run it from the Actions tab ("Run workflow"). Needs these repository secrets:
+#   TAURI_SIGNING_PRIVATE_KEY           contents of ~/.tauri/k8sview.key
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  the key's password (empty if it has none)
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      # <year>.<month>.<day>.<random>, shared by every platform below.
+      - id: version
+        run: node scripts/version.mjs --print-only >> "$GITHUB_OUTPUT"
+
+  create-release:
+    needs: version
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.release.outputs.result }}
+    steps:
+      - id: release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: "${{ needs.version.outputs.tag }}",
+              name: "k8sview ${{ needs.version.outputs.version }}",
+              target_commitish: context.sha,
+              draft: true,
+              generate_release_notes: true,
+            });
+            return data.id;
+
+  build:
+    needs: [version, create-release]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest # Apple Silicon
+          - platform: windows-latest
+          - platform: ubuntu-22.04
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - run: pnpm install --frozen-lockfile
+
+      # Stamp the shared version and point the updater at this repo's latest release.
+      - shell: bash
+        run: >
+          node scripts/version.mjs
+          --set "${{ needs.version.outputs.version }}"
+          --endpoint "https://github.com/${{ github.repository }}/releases/latest/download/latest.json"
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # macOS code signing / notarization (optional; needs an Apple Developer account):
+          # APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
+          # APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          tauriScript: pnpm tauri
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true
+
+  # Only a published (non-draft) release is "latest", which is what apps check.
+  publish:
+    needs: [create-release, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ needs.create-release.outputs.release_id }},
+              draft: false,
+              make_latest: "true",
+            });
