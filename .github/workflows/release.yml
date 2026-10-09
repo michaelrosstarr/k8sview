@@ -4,7 +4,7 @@
 #
 # Run it from the Actions tab ("Run workflow"). Needs these repository secrets:
 #   TAURI_SIGNING_PRIVATE_KEY           contents of ~/.tauri/k8sview.key
-#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  the key's password (empty if it has none)
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  the key's password; omit it if the key has none
 name: Release
 
 on:

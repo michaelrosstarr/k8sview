@@ -86,7 +86,8 @@ One-time setup:
 1. Push this repo to GitHub. It must be public for the app to download updates without a token.
 2. Add repository secrets (Settings → Secrets and variables → Actions):
    - `TAURI_SIGNING_PRIVATE_KEY`: the contents of `~/.tauri/k8sview.key`
-   - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: empty (the key has no password)
+   - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: only if the key has a password. The generated key
+     doesn't, so skip it (GitHub won't store an empty secret; a missing one reads as empty).
 3. Back up `~/.tauri/k8sview.key` somewhere safe. Installed apps only accept updates signed with
    it; if it's lost, people must reinstall manually after a new key is generated.
 
