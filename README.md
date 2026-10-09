@@ -17,13 +17,90 @@ A small desktop Kubernetes viewer built with Tauri v2, Next.js (static export), 
 The app reads `~/.kube/config` (or `$KUBECONFIG`) and talks to the cluster from Rust via the `kube` crate.
 Secret values are never fetched.
 
-## Prerequisites
+## Install
+
+Download the latest build for your platform from the
+**[Releases page](https://github.com/michaelrosstarr/k8sview/releases/latest)**.
+
+| Platform | File | Requirements |
+|---|---|---|
+| macOS (Apple Silicon) | `k8sview_<version>_aarch64.dmg` | M1 or later, macOS 11+. Intel Macs aren't supported. |
+| Windows | `k8sview_<version>_x64-setup.exe` | Windows 10 or 11, 64-bit |
+| Linux | `k8sview_<version>_amd64.AppImage` (or `.deb`) | x86_64 |
+
+You also need a kubeconfig (`~/.kube/config`, or set `KUBECONFIG`) and, if your clusters use them,
+the auth plugins it calls (`gcloud`, `aws`, `kubelogin`, ...) installed as they would be for `kubectl`.
+
+The builds aren't signed by Apple or Microsoft, so each platform asks you to confirm the first
+launch. You only do this once: updates the app installs afterwards open without asking.
+
+### macOS
+
+1. Open the `.dmg` and drag **k8sview** into **Applications**.
+2. Open k8sview. macOS says *Apple could not verify "k8sview" is free of malware*. Click **Done**
+   (not *Move to Trash*).
+3. Open **System Settings → Privacy & Security**, scroll to **Security**, and next to
+   *"k8sview" was blocked to protect your Mac* click **Open Anyway**. Confirm with your password or
+   Touch ID, then click **Open Anyway** once more.
+
+On macOS 14 (Sonoma) and earlier you can instead right-click k8sview in Applications and choose
+**Open**.
+
+Or do it from Terminal, which removes the "downloaded from the internet" flag from k8sview only:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/k8sview.app
+```
+
+If macOS says k8sview *"is damaged and can't be opened"*, you have the first release
+(`2026.10.9.1887`), whose bundle signature was incomplete. Install a newer release, or run the
+`xattr` command above.
+
+### Windows
+
+1. Run `k8sview_<version>_x64-setup.exe`.
+2. If SmartScreen shows *Windows protected your PC*, click **More info → Run anyway**.
+3. The installer adds k8sview to the Start menu. It installs for your user only, so it doesn't
+   need administrator rights.
+
+### Linux
+
+**AppImage** (recommended; it updates itself):
+
+```sh
+chmod +x k8sview_*_amd64.AppImage
+./k8sview_*_amd64.AppImage
+```
+
+**Debian / Ubuntu package** (doesn't update itself; install each new `.deb` the same way):
+
+```sh
+sudo apt install ./k8sview_*_amd64.deb
+```
+
+### Updates
+
+k8sview checks for a new release 15 seconds after it starts and every 6 hours after that. You can
+also click **Updates** at the bottom of the sidebar. When there's a new version, **Update available**
+appears: click it to see what's new, then **Install & restart**. The download is checked against
+the app's signing key before it's installed. Open port forwards and terminals close when the app
+restarts.
+
+### Uninstall
+
+- **macOS:** drag `/Applications/k8sview.app` to the Trash.
+- **Windows:** Settings → Apps → k8sview → Uninstall.
+- **Linux:** delete the AppImage, or `sudo apt remove k8sview`.
+
+## Development
+
+### Prerequisites
 
 - Node 24+ and pnpm
 - Rust (stable) and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS
 - A working kubeconfig
 
-## Run
+### Run
 
 ```sh
 pnpm install
@@ -34,12 +111,16 @@ pnpm tauri build    # release bundle in src-tauri/target/release/bundle
 `pnpm dev` / `pnpm build` alone only serve or export the frontend; it needs the Tauri backend to reach a cluster.
 Both copy Monaco's assets into `public/monaco` first (`scripts/copy-monaco.mjs`) so the editor works offline.
 
-## Layout
+Local builds are named **k8sview - dev** (with their own app ID, `dev.k8sview.app.dev`) and show
+a **dev** badge, so they never get mixed up with an installed release. Only the release workflow
+builds plain **k8sview**.
+
+### Layout
 
 | Path | Purpose |
 |---|---|
 | `src/app/(main)/page.tsx` | App shell: context/namespace pickers, navigation, log dock |
-| `src/app/logs/page.tsx` | Popped-out log window |
+| `src/app/logs/page.tsx`, `src/app/shell/page.tsx` | Popped-out log / shell windows |
 | `src/components/` | Pods table, pod detail drawer, ConfigMaps view, Monaco viewer |
 | `src/lib/k8s.ts` | Typed `invoke()` wrappers for the Rust commands |
 | `src-tauri/src/lib.rs` | Tauri commands and client state |
@@ -94,7 +175,9 @@ One-time setup:
 Local builds (`pnpm tauri dev`, or `pnpm tauri build` without `--endpoint` stamped in) have no
 update URL, so **Updates** reports that updates aren't configured. Installing is disabled in dev.
 
-The builds aren't code-signed by Apple or Microsoft, so the first install shows a Gatekeeper
-("unidentified developer": right-click → Open) or SmartScreen warning. Updates installed by the
-app afterwards don't. Apple signing/notarization can be added to the workflow with an Apple
-Developer account (see the commented variables in `.github/workflows/release.yml`).
+The builds aren't code-signed by Apple or Microsoft, so the first launch asks people to confirm
+(see [Install](#install)). macOS bundles are ad-hoc signed (`bundle.macOS.signingIdentity: "-"`),
+which is what turns macOS's unfixable *"is damaged"* error into the normal *"could not verify"*
+prompt. Updates installed by the app afterwards don't ask again. Signing and notarizing with an
+Apple Developer account removes the macOS prompt entirely; see the commented variables in
+`.github/workflows/release.yml`.
